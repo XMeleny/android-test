@@ -3,7 +3,7 @@ package com.example.test
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -23,13 +23,12 @@ class MainActivity : AppCompatActivity() {
 
 class MyPagerAdapter(private val context: Context) : PagerAdapter() {
     private val dataList = mutableListOf<String>()
-    private val cacheViewList = LinkedList<View>()
+    private val cacheViewList = LinkedList<TextView>()
 
     init {
         for (i in 1..9) {
             dataList.add((1111 * i).toString())
         }
-        Log.d("zzxmer", "dataList = $dataList");
     }
 
     override fun getCount(): Int {
@@ -42,31 +41,27 @@ class MyPagerAdapter(private val context: Context) : PagerAdapter() {
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
         Log.d("zzxmer", "instantiateItem: position=$position, data[pos]=${dataList[position]}");
+        val currentView: TextView = if (cacheViewList.isEmpty()) {
+            val newView = TextView(context)
 
-        val currentView: View = if (cacheViewList.isEmpty()) {
-            val newView = LayoutInflater.from(context).inflate(R.layout.custom_view_layout, container, false)
-            val holder = MyViewHolder(newView.findViewById(R.id.textview))
-            newView.tag = holder
+            newView.gravity = Gravity.CENTER
             newView
         } else {
             cacheViewList.remove()
         }
 
-        val viewHolder = currentView.tag as MyViewHolder
-        viewHolder.textView.text = dataList[position]
+        currentView.text = dataList[position]
 
         (currentView.parent as? ViewGroup)?.removeView(currentView)
-        container.addView(currentView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        container.addView(currentView, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
 
         return currentView
     }
 
     override fun destroyItem(container: ViewGroup, position: Int, `object`: Any) {
         Log.d("zzxmer", "destroyItem: position=$position");
-        val currentView = `object` as View
+        val currentView = `object` as TextView
         container.removeView(currentView)
         cacheViewList.add(currentView)
     }
 }
-
-class MyViewHolder(val textView: TextView)
