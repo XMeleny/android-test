@@ -2,6 +2,9 @@ package com.example.test
 
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
 import android.view.Gravity
 import android.view.View
@@ -10,11 +13,13 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
+import java.lang.ref.WeakReference
 import java.util.*
 import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
     lateinit var viewPager: ViewPager
+    lateinit var handler: MyHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,12 +27,14 @@ class MainActivity : AppCompatActivity() {
 
         viewPager = findViewById(R.id.viewpager)
         val dataList = mutableListOf<String>().apply {
-            for (i in 1..1) {
+            for (i in 1..5) {
                 add((i * 1111111).toString())
             }
             Log.d("zzxmer", "init data list: $this");
         }
         initViewPager(dataList)
+        handler = MyHandler(WeakReference(viewPager))
+        handler.sendEmptyMessageDelayed(MyHandler.MSG_AUTO_SCROLL, 1000)
     }
 
     fun initViewPager(dataList: List<String>) {
@@ -43,6 +50,15 @@ class MainActivity : AppCompatActivity() {
                 if (positionOffset == 0f) {
                     Log.d("zzxmer", "onPageScrolled: pos=$position");
                     myPagerAdapter.update()
+                }
+            }
+
+            override fun onPageScrollStateChanged(state: Int) {
+                super.onPageScrollStateChanged(state)
+                if (state == ViewPager.SCROLL_STATE_DRAGGING || state == ViewPager.SCROLL_STATE_SETTLING) {
+                    handler.removeMessages(MyHandler.MSG_AUTO_SCROLL)
+                } else {
+                    handler.sendEmptyMessageDelayed(MyHandler.MSG_AUTO_SCROLL, 1000)
                 }
             }
         })
@@ -142,4 +158,21 @@ class MyPagerAdapter(private val context: Context, private val viewPager: ViewPa
 
 class Holder(val data: String, val viewHolder: ViewHolder) {
     class ViewHolder(val textView: TextView)// TODO: zhuxiaomei 2022/3/13 elements of MyView
+}
+
+
+class MyHandler(private val viewPager: WeakReference<ViewPager>) : Handler(Looper.myLooper()!!) {
+    companion object {
+        const val MSG_AUTO_SCROLL = 1000
+    }
+
+    override fun handleMessage(msg: Message) {
+        super.handleMessage(msg)
+        removeMessages(msg.what)
+        if (msg.what == MSG_AUTO_SCROLL) {
+            viewPager.get()?.apply {
+                currentItem += 1
+            }
+        }
+    }
 }
