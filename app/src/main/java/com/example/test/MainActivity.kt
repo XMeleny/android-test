@@ -1,6 +1,7 @@
 package com.example.test
 
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -35,6 +36,8 @@ class MainActivity : AppCompatActivity() {
         initViewPager(dataList)
         handler = MyHandler(WeakReference(viewPager))
         handler.sendEmptyMessageDelayed(MyHandler.MSG_AUTO_SCROLL, 1000)
+
+        findViewById<MyViewPager>(R.id.myViewPager).test()
     }
 
     fun initViewPager(dataList: List<String>) {
@@ -110,6 +113,7 @@ class MyPagerAdapter(private val context: Context, private val viewPager: ViewPa
         val currentView: TextView = if (cacheViewList.isEmpty()) {
             val newView = TextView(context)
             newView.gravity = Gravity.CENTER
+            newView.setBackgroundColor(Color.RED)
             newView
         } else {
             cacheViewList.remove()
@@ -170,9 +174,10 @@ class MyHandler(private val viewPager: WeakReference<ViewPager>) : Handler(Loope
         super.handleMessage(msg)
         removeMessages(msg.what)
         if (msg.what == MSG_AUTO_SCROLL) {
-            viewPager.get()?.apply {
-                currentItem += 1
-            }
+
+//            viewPager.get()?.apply {
+//                currentItem += 1
+//            }
         }
     }
 }
