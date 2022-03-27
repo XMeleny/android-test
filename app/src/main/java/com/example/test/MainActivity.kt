@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
 import java.lang.ref.WeakReference
 import java.util.*
@@ -33,42 +32,54 @@ class MainActivity : AppCompatActivity() {
             }
             Log.d("zzxmer", "init data list: $this");
         }
-        initViewPager(dataList)
+//        initViewPager(dataList)
         handler = MyHandler(WeakReference(viewPager))
         handler.sendEmptyMessageDelayed(MyHandler.MSG_AUTO_SCROLL, 1000)
 
-        findViewById<MyViewPager>(R.id.myViewPager).test()
-    }
 
-    fun initViewPager(dataList: List<String>) {
-        val myPagerAdapter = MyPagerAdapter(this, viewPager, dataList)
-        viewPager.adapter = myPagerAdapter
-        if (dataList.size > 1) {
-            viewPager.currentItem = 1
-        }
-
-        viewPager.addOnPageChangeListener(object : ViewPager.SimpleOnPageChangeListener() {
+        val myViewpager = findViewById<MyViewPager>(R.id.myViewPager)
+        val myViewPagerAdapter = MyPagerAdapter(this, myViewpager, dataList)
+        myViewpager.setAdapter(myViewPagerAdapter)
+        myViewpager.setCurrentItem(1)
+        myViewpager.addOnPageChangeListener(object : ViewPager.SimpleOnPageChangeListener() {
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels)
                 if (positionOffset == 0f) {
                     Log.d("zzxmer", "onPageScrolled: pos=$position");
-                    myPagerAdapter.update()
-                }
-            }
-
-            override fun onPageScrollStateChanged(state: Int) {
-                super.onPageScrollStateChanged(state)
-                if (state == ViewPager.SCROLL_STATE_DRAGGING || state == ViewPager.SCROLL_STATE_SETTLING) {
-                    handler.removeMessages(MyHandler.MSG_AUTO_SCROLL)
-                } else {
-                    handler.sendEmptyMessageDelayed(MyHandler.MSG_AUTO_SCROLL, 1000)
+                    myViewPagerAdapter.update()
                 }
             }
         })
     }
+
+    fun initViewPager(dataList: List<String>) {
+//        val myPagerAdapter = MyPagerAdapter(this, viewPager, dataList)
+//        viewPager.adapter = myPagerAdapter
+//        if (dataList.size > 1) {
+//            viewPager.currentItem = 1
+//        }
+//        viewPager.addOnPageChangeListener(object : ViewPager.SimpleOnPageChangeListener() {
+//            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+//                super.onPageScrolled(position, positionOffset, positionOffsetPixels)
+//                if (positionOffset == 0f) {
+//                    Log.d("zzxmer", "onPageScrolled: pos=$position");
+//                    myPagerAdapter.update()
+//                }
+//            }
+//
+//            override fun onPageScrollStateChanged(state: Int) {
+//                super.onPageScrollStateChanged(state)
+//                if (state == ViewPager.SCROLL_STATE_DRAGGING || state == ViewPager.SCROLL_STATE_SETTLING) {
+//                    handler.removeMessages(MyHandler.MSG_AUTO_SCROLL)
+//                } else {
+//                    handler.sendEmptyMessageDelayed(MyHandler.MSG_AUTO_SCROLL, 1000)
+//                }
+//            }
+//        })
+    }
 }
 
-class MyPagerAdapter(private val context: Context, private val viewPager: ViewPager, private val dataList: List<String>) : PagerAdapter() {
+class MyPagerAdapter(private val context: Context, private val viewPager: MyViewPager, private val dataList: List<String>) : MyViewPagerAdapter() {
     private val cacheViewList = LinkedList<TextView>()
     private var showList = ArrayList<String>()
 
@@ -96,7 +107,7 @@ class MyPagerAdapter(private val context: Context, private val viewPager: ViewPa
             showList = dataList as ArrayList<String>
         }
 
-        Log.d("zzxmer", "resetData: pos=$pos, showList=$showList");
+        Log.d("zzxmer", "resetData: pos=$pos(real pos in data list, not in show list), showList=$showList");
     }
 
     override fun getCount(): Int {
@@ -104,7 +115,7 @@ class MyPagerAdapter(private val context: Context, private val viewPager: ViewPa
     }
 
     override fun isViewFromObject(view: View, `object`: Any): Boolean {
-        return view.tag == `object` // FIXME: zhuxiaomei 2022/3/13
+        return view.tag == `object`
     }
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
@@ -144,7 +155,7 @@ class MyPagerAdapter(private val context: Context, private val viewPager: ViewPa
     }
 
     fun update() {
-        resetData(dataList.indexOf(showList[viewPager.currentItem]))// get real index of showing element in data list
+        resetData(dataList.indexOf(showList[viewPager.getCurrentItem()]))// get real index of showing element in data list
         notifyDataSetChanged() // invoke getItemPosition
     }
 
@@ -175,7 +186,7 @@ class MyHandler(private val viewPager: WeakReference<ViewPager>) : Handler(Loope
         removeMessages(msg.what)
         if (msg.what == MSG_AUTO_SCROLL) {
 
-//            viewPager.get()?.apply {
+//            viewPager.get()?.apply { // 自动轮播，测试期间暂时关闭
 //                currentItem += 1
 //            }
         }
