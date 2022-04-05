@@ -3,21 +3,17 @@ package com.example.test
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.Message
 import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import java.lang.ref.WeakReference
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private lateinit var vp: MyViewPager2
-    private lateinit var handler: MyHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,8 +28,14 @@ class MainActivity : AppCompatActivity() {
         vp = findViewById(R.id.vp2)
         vp.setAdapter(MyPagerAdapter(this, vp, dataList))
 
-        handler = MyHandler(WeakReference(vp))
-        handler.sendEmptyMessageDelayed(MyHandler.MSG_AUTO_SCROLL, 1000)
+        findViewById<Button>(R.id.btn_scroll).setOnClickListener {
+            vp.startAutoScroll()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        vp.stopAutoScroll()
     }
 }
 
@@ -94,22 +96,4 @@ class MyPagerAdapter(private val context: Context, private val viewPager: MyView
 
 class Holder(val data: String, val viewHolder: ViewHolder) {
     class ViewHolder(val textView: TextView)// TODO: zhuxiaomei 2022/3/13 elements of MyView
-}
-
-
-class MyHandler(private val viewPager: WeakReference<MyViewPager2>) : Handler(Looper.myLooper()!!) {
-    companion object {
-        const val MSG_AUTO_SCROLL = 1000
-    }
-
-    override fun handleMessage(msg: Message) {
-        super.handleMessage(msg)
-        removeMessages(msg.what)
-        if (msg.what == MSG_AUTO_SCROLL) {
-
-//            viewPager.get()?.apply { // 自动轮播，测试期间暂时关闭
-//                currentItem += 1
-//            }
-        }
-    }
 }

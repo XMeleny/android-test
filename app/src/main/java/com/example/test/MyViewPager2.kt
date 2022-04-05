@@ -1,11 +1,15 @@
 package com.example.test
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import java.lang.ref.WeakReference
 
 class MyViewPager2 @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : ViewGroup(context, attrs, defStyleAttr) {
@@ -54,9 +58,11 @@ class MyViewPager2 @JvmOverloads constructor(context: Context, attrs: AttributeS
         val x = event.x
         when (event.action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
+                handler.removeMessages(MyHandler2.MSG_AUTO_SCROLL)
                 mLastMotionX = x
             }
             MotionEvent.ACTION_MOVE -> {
+                handler.removeMessages(MyHandler2.MSG_AUTO_SCROLL)
                 val dx = x - mLastMotionX
                 scrollTo((scrollX - dx).toInt(), scrollY)
                 mLastMotionX = x
@@ -71,6 +77,9 @@ class MyViewPager2 @JvmOverloads constructor(context: Context, attrs: AttributeS
                 }
             }
             else -> {
+                if (isAutoScroll) {
+                    handler.sendEmptyMessageDelayed(MyHandler2.MSG_AUTO_SCROLL, 1000)
+                }
                 // TODO: zhuxiaomei 2022/4/5 根据 velocity 和 scroll 完整跳转
             }
         }
@@ -206,8 +215,39 @@ class MyViewPager2 @JvmOverloads constructor(context: Context, attrs: AttributeS
         return null
     }
 
-    fun autoScroll(){
-        populate(mCurPosition+1)
+    fun autoScroll() {
+        populate(mCurPosition + 1)
+        scrollTo(mCurPosition * realChildWidth, 0)
+        if (isAutoScroll) {
+            handler.sendEmptyMessageDelayed(MyHandler2.MSG_AUTO_SCROLL, 1000)
+        }
+    }
+
+    var isAutoScroll = false
+    fun startAutoScroll() {
+        isAutoScroll = true
+        handler.sendEmptyMessageDelayed(MyHandler2.MSG_AUTO_SCROLL, 1000)
+    }
+
+    fun stopAutoScroll() {
+        isAutoScroll = false
+        handler.removeMessages(MyHandler2.MSG_AUTO_SCROLL)
+    }
+
+    val handler = MyHandler2(WeakReference(this))
+}
+
+class MyHandler2(val vp: WeakReference<MyViewPager2>) : Handler(Looper.getMainLooper()) {
+    companion object {
+        const val MSG_AUTO_SCROLL = 1000
+    }
+
+    override fun handleMessage(msg: Message) {
+        super.handleMessage(msg)
+        removeMessages(msg.what)
+        if (msg.what == MSG_AUTO_SCROLL) {
+            vp.get()?.autoScroll()
+        }
     }
 }
 
