@@ -1,10 +1,10 @@
 package com.example.test.rxjava;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
 import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -28,4 +28,10 @@ public class ExampleUnitTest {
         System.out.println("v1 regex: " + Pattern.compile(allowV1).matcher(text).matches());
         System.out.println("v2 regex: " + Pattern.compile(allowV2).matcher(text).matches());
     }
+
+    @Test
+    public void testDivide() {
+        KotlinTest.testDivide();
+    }
+
 }
