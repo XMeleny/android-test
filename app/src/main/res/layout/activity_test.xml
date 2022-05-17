@@ -9,16 +9,53 @@
     android:orientation="vertical"
     tools:context=".TestActivity">
 
-
-
-
-
     <VideoView
         android:id="@+id/vv_test"
         android:layout_width="match_parent"
+        android:background="@android:color/transparent"
         android:layout_height="match_parent" />
-    <View
+
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:id="@+id/v_status_bar"
-        android:layout_height="0dp" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <CheckBox
+            android:id="@+id/cb_videoRepeat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:text="video repeat" />
+
+        <Button
+            android:id="@+id/btn_playVideo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="start" />
+
+        <Button
+            android:id="@+id/btn_resume"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="resume" />
+
+        <Button
+            android:id="@+id/btn_pause"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="pause" />
+
+        <Button
+            android:id="@+id/btn_stopCallback"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="stop play back" />
+
+        <Button
+            android:id="@+id/btn_setColor"
+            android:text="set color"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
 </FrameLayout>

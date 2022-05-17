@@ -1,65 +1,69 @@
 package com.example.test
 
-import android.content.Context
+import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.view.View
+import android.util.Log
+import android.widget.Button
+import android.widget.CheckBox
 import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
 
 class TestActivity : AppCompatActivity() {
-
-    lateinit var videoView: VideoView
-    lateinit var fakeStatusBar: View
+    private lateinit var videoView: VideoView
+    var videoComplete = false
+    var videoRepeat = false
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.d("zzxmer", "onCreate: ")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_test)
-        supportActionBar?.hide()
-
-        configImmerseBar(this) // COMMENT: zzxmer 沉浸式
-
         videoView = findViewById(R.id.vv_test)
-        fakeStatusBar = findViewById(R.id.v_status_bar)
-
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            val statusBarHeight = getStatusBarHeight(this)
-            fakeStatusBar.layoutParams.height = statusBarHeight
-            fakeStatusBar.alpha = 0f
+        findViewById<Button>(R.id.btn_playVideo).setOnClickListener {
+            playVideo()
         }
 
-        videoView.setOnCompletionListener {
-            videoView.start()
+        findViewById<Button>(R.id.btn_setColor).setOnClickListener {
+            window.statusBarColor = Color.BLUE
+            window.navigationBarColor = Color.BLUE
         }
-
-        playVideo()
-
     }
+
+    var hasVideo = false
 
     fun playVideo() {
+        hasVideo = true
         videoView.setVideoURI(Uri.parse("android.resource://$packageName/${R.raw.test}"))
         videoView.start()
+        videoRepeat = findViewById<CheckBox>(R.id.cb_videoRepeat).isChecked
+        videoView.setOnCompletionListener {
+            videoComplete = true
+            if (videoRepeat) {
+                videoView.start()
+            }
+        }
     }
 
-    fun stopVideo() {
-        videoView.stopPlayback()
+    override fun onResume() {
+        Log.d("zzxmer", "onResume: ")
+        super.onResume()
+        if (hasVideo) {
+            videoView.start()
+        }
     }
 
-    override fun onRestart() {
-        super.onRestart()
-        playVideo()
+    override fun onPause() {
+        Log.d("zzxmer", "onPause: ")
+        super.onPause()
+        if (hasVideo) {
+            videoView.pause()
+        }
     }
 
-    override fun onStop() {
-        super.onStop()
-        stopVideo()
+    override fun onDestroy() {
+        Log.d("zzxmer", "onDestroy: ")
+        super.onDestroy()
+        if (hasVideo) {
+            videoView.stopPlayback()
+        }
     }
-
-    fun getStatusBarHeight(context: Context): Int {
-        // 获得状态栏高度
-        val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
-        return context.resources.getDimensionPixelSize(resourceId)
-    }
-
 }
