@@ -10,12 +10,13 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import java.lang.ref.WeakReference
+import java.util.*
 
 class MyViewPager2 @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : ViewGroup(context, attrs, defStyleAttr) {
     class ItemInfo {
         var pos: Int = 0        // layout 位置为 pos*childWidth, 可以小于 0
-        lateinit var obj: Any   // 用于对应view
+        lateinit var viewHolder: XMViewHolder   // 用于对应view
 
         override fun toString(): String {
             return pos.toString()
@@ -26,7 +27,7 @@ class MyViewPager2 @JvmOverloads constructor(context: Context, attrs: AttributeS
     private var mCurItemInfo: ItemInfo? = null
     private var mCurPosition: Int = 0
 
-    private var mAdapter: MyViewPagerAdapter2? = null
+    private var mAdapter: XMViewPagerAdapter? = null
 
     private var realChildWidth: Int = 0
 
@@ -86,10 +87,10 @@ class MyViewPager2 @JvmOverloads constructor(context: Context, attrs: AttributeS
         return true // FIXME: zhuxiaomei 2022/3/27 暂不考虑 touch 事件分发
     }
 
-    fun setAdapter(adapter: MyViewPagerAdapter2?) {
+    fun setAdapter(adapter: XMViewPagerAdapter?) {
         if (mAdapter != null) {
             for (itemInfo in mItemInfos) {
-                mAdapter!!.destroyItem(this, itemInfo.pos, itemInfo.obj)
+                destroyItem(itemInfo)
             }
             mItemInfos.clear()
 
@@ -147,7 +148,7 @@ class MyViewPager2 @JvmOverloads constructor(context: Context, attrs: AttributeS
                     break
                 }
                 if (pos == itemInfo.pos) {
-                    mAdapter!!.destroyItem(this, itemInfo.pos, itemInfo.obj)
+                    destroyItem(itemInfo)
                     mItemInfos.removeAt(idx)
                     idx--
                     curIdx--
@@ -171,7 +172,7 @@ class MyViewPager2 @JvmOverloads constructor(context: Context, attrs: AttributeS
                     break
                 }
                 if (pos == itemInfo.pos) {
-                    mAdapter!!.destroyItem(this, itemInfo.pos, itemInfo.obj)
+                    destroyItem(itemInfo)
                     mItemInfos.removeAt(idx)
                 }
             } else if (itemInfo != null && pos == itemInfo.pos) {
@@ -189,7 +190,7 @@ class MyViewPager2 @JvmOverloads constructor(context: Context, attrs: AttributeS
 
         val itemInfo = ItemInfo()
         itemInfo.pos = position
-        itemInfo.obj = mAdapter!!.instantiateItem(this, position)
+        itemInfo.viewHolder = instantiateItem(position)
 
         if (index < 0) {
             mItemInfos.add(0, itemInfo)
@@ -208,7 +209,7 @@ class MyViewPager2 @JvmOverloads constructor(context: Context, attrs: AttributeS
             return null
         }
         for (itemInfo in mItemInfos) {
-            if (mAdapter!!.isViewFromObject(child, itemInfo.obj)) {
+            if (child.tag == itemInfo.viewHolder) {
                 return itemInfo
             }
         }
@@ -234,7 +235,38 @@ class MyViewPager2 @JvmOverloads constructor(context: Context, attrs: AttributeS
         handler.removeMessages(MyHandler2.MSG_AUTO_SCROLL)
     }
 
-    val handler = MyHandler2(WeakReference(this))
+    private val handler = MyHandler2(WeakReference(this))
+
+    private fun instantiateItem(position: Int): XMViewHolder {
+        val currentView = if (mAdapter!!.cacheViewList.isEmpty()) {
+            val viewHolder = mAdapter!!.getEmptyView()
+            viewHolder.view.tag = viewHolder
+            viewHolder.view
+        } else {
+            mAdapter!!.cacheViewList.remove()
+        }
+
+        val size = mAdapter!!.getCount()
+        val tempPos = position % size
+        val realPos = if (tempPos < 0) {
+            tempPos + size
+        } else {
+            tempPos
+        }
+
+        mAdapter!!.bind(currentView, realPos)
+
+        removeView(currentView)
+        addView(currentView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+
+        return currentView.tag as XMViewHolder
+    }
+
+    private fun destroyItem(itemInfo: ItemInfo) {
+        val view = itemInfo.viewHolder.view
+        removeView(view)
+        mAdapter!!.cacheViewList.add(view)
+    }
 }
 
 class MyHandler2(val vp: WeakReference<MyViewPager2>) : Handler(Looper.getMainLooper()) {
@@ -251,24 +283,22 @@ class MyHandler2(val vp: WeakReference<MyViewPager2>) : Handler(Looper.getMainLo
     }
 }
 
-open class MyViewPagerAdapter2 {
+open class XMViewPagerAdapter() {
+    val cacheViewList = LinkedList<View>()
     open fun getCount(): Int {
         return 0
     }
 
-    /**
-     * @param position 有可能小于0
-     */
-    open fun instantiateItem(container: ViewGroup, position: Int): Any {
+    open fun bind(view: View, position: Int) {
         throw IllegalArgumentException("should override")
     }
 
-    open fun destroyItem(container: ViewGroup, position: Int, obj: Any) {
+    open fun getEmptyView(): XMViewHolder {
         throw IllegalArgumentException("should override")
     }
+}
 
-    open fun isViewFromObject(view: View, obj: Any): Boolean {
-        return false
-    }
+open class XMViewHolder(val view: View) {
+
 }
 
