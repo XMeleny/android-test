@@ -12,8 +12,14 @@
         android:layout_height="100dp" />
 
     <Button
-        android:id="@+id/btn_scroll"
+        android:id="@+id/btn_start_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="scroll" />
+        android:text="start scroll" />
+
+    <Button
+        android:id="@+id/btn_stop_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="stop scroll" />
 </LinearLayout>

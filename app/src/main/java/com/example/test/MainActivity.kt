@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val dataList = mutableListOf<String>().apply {
-            for (i in 0..3) {
+            for (i in 1..3) {
                 add((i * 1111111).toString())
             }
             Log.d("zzxmer", "init data list: $this");
@@ -26,14 +26,13 @@ class MainActivity : AppCompatActivity() {
         vp = findViewById(R.id.vp2)
         vp.setAdapter(MyXMPagerAdapter(this, dataList))
 
-        findViewById<Button>(R.id.btn_scroll).setOnClickListener {
+        findViewById<Button>(R.id.btn_start_scroll).setOnClickListener {
             vp.startAutoScroll()
         }
-    }
 
-    override fun onPause() {
-        super.onPause()
-        vp.stopAutoScroll()
+        findViewById<Button>(R.id.btn_stop_scroll).setOnClickListener {
+            vp.stopAutoScroll()
+        }
     }
 }
 
