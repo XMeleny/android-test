@@ -1,57 +1,61 @@
 package com.example.test
 
-import android.content.Context
-import android.graphics.Color
-import android.os.Bundle
+import android.content.IntentFilter
 import android.util.Log
-import android.view.Gravity
-import android.view.View
-import android.widget.Button
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import com.example.test.base.BaseActivity
+import java.io.File
 
-class MainActivity : AppCompatActivity() {
-    private lateinit var vp: MyViewPager2
+private const val TAG = "MainActivity"
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+class MainActivity : BaseActivity() {
+    override fun initUI() {
+        super.initUI()
 
-        val dataList = mutableListOf<String>().apply {
-            for (i in 1..3) {
-                add((i * 1111111).toString())
+        addBtn("test view pager", ViewPagerTestActivity::class.java)
+
+        val pathEditText = addEditText("path for apk")
+        addBtn("test activity intent filter") {
+            var path = pathEditText.text.toString()
+            if (path.isEmpty()) {
+                path = "/data/app/com.taobao.taobao-MyQ48Fw0zqHXXtYxWvsGnQ==/base.apk"
             }
-            Log.d("zzxmer", "init data list: $this");
-        }
-        vp = findViewById(R.id.vp2)
-        vp.setAdapter(MyXMPagerAdapter(this, dataList))
-
-        findViewById<Button>(R.id.btn_start_scroll).setOnClickListener {
-            vp.startAutoScroll()
-        }
-
-        findViewById<Button>(R.id.btn_stop_scroll).setOnClickListener {
-            vp.stopAutoScroll()
+            parseApkByReflect(File(path))
         }
     }
-}
 
-class MyXMPagerAdapter(private val context: Context, private val dataList: List<String>) : XMViewPagerAdapter() {
-    override fun getCount(): Int {
-        return dataList.size
+    private fun parseApkByReflect(apkFile: File?) {
+        try {
+            // android 9
+            val clazz = Class.forName("android.content.pm.PackageParser")
+            val packageParser = clazz.newInstance()
+            val methodParsePackage = clazz.getMethod("parsePackage", File::class.java, Int::class.javaPrimitiveType)
+            val packageObj = methodParsePackage.invoke(packageParser, apkFile, 0) ?: return
+            val activities = packageObj.javaClass.getField("activities")[packageObj] as List<*>
+            for (data in activities) {
+                data ?: continue
+
+                val componentInfo = data.javaClass.getField("info").get(data)
+                val name = componentInfo.javaClass.getField("name").get(componentInfo)
+                Log.d(TAG, "parseApkByReflect: activity=$name")
+
+                val filters = data.javaClass.getField("intents")[data] as List<IntentFilter>
+                for (filter in filters) {
+                    val actions = getList(filter.actionsIterator())
+                    val categories = getList(filter.categoriesIterator())
+                    Log.d(TAG, "filter: actions=$actions, categories=$categories")
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
-    override fun bind(view: View, position: Int) {
-        Log.d("zzxmer", "bind: position=$position")
-        val myView = view as TextView
-        myView.text = dataList[position]
-    }
-
-    override fun getEmptyView(): XMViewHolder {
-        val newView = TextView(context)
-        newView.gravity = Gravity.CENTER
-        newView.setBackgroundColor(Color.RED)
-
-        return XMViewHolder(newView)
+    private fun getList(iterator: Iterator<String>?): List<String>? {
+        iterator ?: return null
+        val result = mutableListOf<String>()
+        while (iterator.hasNext()) {
+            result.add(iterator.next())
+        }
+        return result
     }
 }

@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -22,12 +23,18 @@ open class BaseActivity : AppCompatActivity() {
         Log.d(getTag(), "onCreate: ")
         setContentView(R.layout.activity_base)
         rootLinearLayout = findViewById(R.id.ll_root)
+
+        initUI()
+
+    }
+
+    open fun initUI() {
+
     }
 
     private fun getOneRowLayoutParam(): LinearLayout.LayoutParams {
         return LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
     }
-
 
     fun addBtn(btnName: String, onClick: () -> Unit): Button {
         val button = Button(this)
@@ -52,6 +59,15 @@ open class BaseActivity : AppCompatActivity() {
         textview.text = text
         rootLinearLayout.addView(textview, getOneRowLayoutParam())
         return textview
+    }
+
+    fun addEditText(hint: String?): EditText {
+        val editText = EditText(this)
+        if (!hint.isNullOrEmpty()) {
+            editText.hint = hint
+        }
+        rootLinearLayout.addView(editText, getOneRowLayoutParam())
+        return editText
     }
 
     fun makeDialog(title: String?, message: String?, positiveText: String?, negativeText: String?, onPositive: () -> Unit, onNegative: () -> Unit): AlertDialog {
